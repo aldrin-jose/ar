@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindAR WebAR Project</title>
 
-  <!-- A-Frame & MindAR -->
+  <!-- Mobile Console Debugger (Remove in production once working) -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+
+  <!-- A-Frame, MindAR, and Animation-Mixer scripts -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
@@ -13,35 +18,50 @@
 <body style="margin: 0; overflow: hidden;">
 
   <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind;"
+    mindar-image="imageTargetSrc: targets.mind;"
     color-space="sRGB"
     renderer="colorManagement: true; antialias: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <a-asset-item
-        id="robotModel"
-        src="https://cdn.aframe.io/test-models/models/RobotExpressive/RobotExpressive.glb">
-      </a-asset-item>
+      <!-- Replace 'your-model-filename.glb' with your exact file name on GitHub (Case-Sensitive!) -->
+      <a-asset-item id="animatedModel" src="your-model-filename.glb"></a-asset-item>
     </a-assets>
 
-    <a-light type="ambient" intensity="2"></a-light>
-    <a-light type="directional" intensity="3" position="1 2 1"></a-light>
+    <!-- Essential Lighting so the model isn't completely black -->
+    <a-light type="ambient" intensity="1.5"></a-light>
+    <a-light type="directional" intensity="2.5" position="1 2 1"></a-light>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0">
+    <!-- Target index 0 matches the first target in targets.mind -->
+    <a-entity mindar-image-target="targetIndex: 0" id="arTarget">
       <a-gltf-model
-        src="#robotModel"
+        src="#animatedModel"
         position="0 0 0"
         rotation="90 0 0"
-        scale="0.2 0.2 0.2"
-        animation-mixer="clip: *">
+        scale="0.5 0.5 0.5"
+        animation-mixer="clip: 01_Run_Armature_0; loop: repeat">
       </a-gltf-model>
     </a-entity>
 
   </a-scene>
+
+  <script>
+    // Debugging target detection
+    document.addEventListener("DOMContentLoaded", () => {
+      const target = document.getElementById("arTarget");
+
+      target.addEventListener("targetFound", () => {
+        console.log("✅ MindAR Target Found!");
+      });
+
+      target.addEventListener("targetLost", () => {
+        console.log("❌ MindAR Target Lost");
+      });
+    });
+  </script>
 
 </body>
 </html>
