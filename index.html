@@ -28,6 +28,19 @@
       <a-asset-item id="animatedModel" src="./boatest.glb" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
     </a-assets>
 
+  <a-scene
+    mindar-image="imageTargetSrc: ./crowntarget.mind;"
+    color-space="sRGB"
+    renderer="colorManagement: true; antialias: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets timeout="10000">
+      <a-asset-item id="animatedModel" src="./crown.glb" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
+    </a-assets>
+
+    
+
     <!-- Essential Lighting -->
     <a-light type="ambient" intensity="1.5"></a-light>
     <a-light type="directional" intensity="2.5" position="1 2 1"></a-light>
