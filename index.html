@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>MindAR Multiple Targets</title>
 
-  <!-- Mobile Console -->
+  <!-- Mobile Debug Console -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>
     eruda.init();
@@ -25,39 +24,34 @@
 <body style="margin:0; overflow:hidden;">
 
 <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind;"
+    mindar-image="imageTargetSrc: ./test.mind;"
     color-space="sRGB"
     renderer="colorManagement: true; antialias: true"
-    vr-mode-ui="enabled:false"
-    device-orientation-permission-ui="enabled:false">
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
 
     <!-- Assets -->
     <a-assets timeout="10000">
 
-        <!-- Boat -->
-        <a-asset-item
-            id="boatModel"
-            src="./boatest.glb"
-            response-type="arraybuffer">
-        </a-asset-item>
-
-        <!-- Crown -->
+        <!-- Crown Model -->
         <a-asset-item
             id="crownModel"
             src="./crown.glb"
             response-type="arraybuffer">
         </a-asset-item>
 
+        <!-- Boat Model -->
+        <a-asset-item
+            id="boatModel"
+            src="./boatest.glb"
+            response-type="arraybuffer">
+        </a-asset-item>
+
     </a-assets>
 
-    <!-- Lights -->
+    <!-- Lighting -->
     <a-light type="ambient" intensity="1.5"></a-light>
-
-    <a-light
-        type="directional"
-        intensity="2.5"
-        position="1 2 1">
-    </a-light>
+    <a-light type="directional" intensity="2.5" position="1 2 1"></a-light>
 
     <!-- Camera -->
     <a-camera
@@ -65,17 +59,17 @@
         look-controls="enabled:false">
     </a-camera>
 
-    <!-- ===================== -->
-    <!-- Target 0 : Boat -->
-    <!-- ===================== -->
+    <!-- ========================== -->
+    <!-- Crown Target (Target 0) -->
+    <!-- ========================== -->
 
     <a-entity
-        id="boatTarget"
+        id="crownTarget"
         mindar-image-target="targetIndex:0">
 
         <a-gltf-model
-            id="boatEntity"
-            src="#boatModel"
+            id="crownEntity"
+            src="#crownModel"
             position="0 0 0"
             rotation="0 0 0"
             scale="0.5 0.5 0.5"
@@ -84,17 +78,17 @@
 
     </a-entity>
 
-    <!-- ===================== -->
-    <!-- Target 1 : Crown -->
-    <!-- ===================== -->
+    <!-- ========================== -->
+    <!-- Boat Target (Target 1) -->
+    <!-- ========================== -->
 
     <a-entity
-        id="crownTarget"
+        id="boatTarget"
         mindar-image-target="targetIndex:1">
 
         <a-gltf-model
-            id="crownEntity"
-            src="#crownModel"
+            id="boatEntity"
+            src="#boatModel"
             position="0 0 0"
             rotation="0 0 0"
             scale="0.5 0.5 0.5"
@@ -110,23 +104,23 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const synth = window.speechSynthesis;
-
     let speechText = "";
 
+    // Load speech text
     fetch("./speech.txt")
-        .then(res => res.text())
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to load speech.txt");
+            return response.text();
+        })
         .then(text => {
             speechText = text.trim();
-            console.log("Speech loaded:", speechText);
+            console.log("Speech Loaded:", speechText);
         })
-        .catch(err => {
-            console.error(err);
+        .catch(error => {
+            console.error(error);
         });
 
-    const boatTarget = document.getElementById("boatTarget");
-    const crownTarget = document.getElementById("crownTarget");
-
-    function speak() {
+    function speakText() {
 
         if (!speechText) return;
 
@@ -144,25 +138,29 @@ document.addEventListener("DOMContentLoaded", () => {
         synth.cancel();
     }
 
-    // Boat
-    boatTarget.addEventListener("targetFound", () => {
-        console.log("Boat Found");
-        speak();
-    });
+    // Crown Events
+    const crownTarget = document.getElementById("crownTarget");
 
-    boatTarget.addEventListener("targetLost", () => {
-        console.log("Boat Lost");
-        stopSpeech();
-    });
-
-    // Crown
     crownTarget.addEventListener("targetFound", () => {
-        console.log("Crown Found");
-        speak();
+        console.log("👑 Crown Target Found");
+        speakText();
     });
 
     crownTarget.addEventListener("targetLost", () => {
-        console.log("Crown Lost");
+        console.log("👑 Crown Target Lost");
+        stopSpeech();
+    });
+
+    // Boat Events
+    const boatTarget = document.getElementById("boatTarget");
+
+    boatTarget.addEventListener("targetFound", () => {
+        console.log("🚤 Boat Target Found");
+        speakText();
+    });
+
+    boatTarget.addEventListener("targetLost", () => {
+        console.log("🚤 Boat Target Lost");
         stopSpeech();
     });
 
