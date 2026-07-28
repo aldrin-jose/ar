@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MindAR WebAR Project</title>
+  <title>MindAR WebAR Project with Text-to-Speech</title>
 
   <!-- Mobile Console Debugger -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
@@ -25,7 +25,6 @@
     device-orientation-permission-ui="enabled: false">
 
     <a-assets timeout="10000">
-      <!-- Updated file reference to crown.glb -->
       <a-asset-item id="animatedModel" src="./crown.glb" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
     </a-assets>
 
@@ -52,24 +51,43 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const target = document.getElementById("arTarget");
-      const model = document.getElementById("modelEntity");
+      let voiceText = ""; // Holds text loaded from speech.txt
+      const synth = window.speechSynthesis; // Built-in Speech Engine
 
-      // Verify if crown.glb loads successfully
-      model.addEventListener("model-loaded", () => {
-        console.log("✅ crown.glb loaded successfully!");
-      });
+      // 1. Fetch text file from your server folder
+      fetch('./speech.txt')
+        .then(response => {
+          if (!response.ok) throw new Error("Failed to load speech.txt");
+          return response.text();
+        })
+        .then(data => {
+          voiceText = data.trim();
+          console.log("📄 File Content Loaded:", voiceText);
+        })
+        .catch(err => console.error("❌ Error reading speech.txt:", err));
 
-      // Output loading errors to Eruda debug console if it fails
-      model.addEventListener("model-error", (e) => {
-        console.error("❌ Failed to load crown.glb:", e.detail);
-      });
-
+      // 2. Play text-to-speech when scanned
       target.addEventListener("targetFound", () => {
         console.log("✅ MindAR Target Found!");
+        
+        if (voiceText && synth) {
+          // Stop any active speech first
+          synth.cancel();
+
+          const utterance = new SpeechSynthesisUtterance(voiceText);
+          utterance.rate = 0.9;  // Adjust reading speed (0.5 to 1.5)
+          utterance.pitch = 1.0; // Adjust pitch
+
+          synth.speak(utterance);
+        }
       });
 
+      // 3. Stop speech when target is lost
       target.addEventListener("targetLost", () => {
         console.log("❌ MindAR Target Lost");
+        if (synth) {
+          synth.cancel(); // Stops reading immediately
+        }
       });
     });
   </script>
