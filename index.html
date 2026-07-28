@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MindAR WebAR Project</title>
 
-  <!-- Mobile Console Debugger (Remove in production once working) -->
+  <!-- Mobile Console Debugger -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>
 
-  <!-- A-Frame, MindAR, and Animation-Mixer scripts -->
+  <!-- A-Frame and MindAR Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
@@ -18,40 +18,51 @@
 <body style="margin: 0; overflow: hidden;">
 
   <a-scene
-    mindar-image="imageTargetSrc: targets.mind;"
+    mindar-image="imageTargetSrc: ./targets.mind;"
     color-space="sRGB"
     renderer="colorManagement: true; antialias: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
-    <a-assets>
-      <!-- Replace 'your-model-filename.glb' with your exact file name on GitHub (Case-Sensitive!) -->
-      <a-asset-item id="animatedModel" src="icecube.glb"></a-asset-item>
+    <a-assets timeout="10000">
+      <!-- Updated file reference to crown.glb -->
+      <a-asset-item id="animatedModel" src="./crown.glb" response-type="arraybuffer" crossorigin="anonymous"></a-asset-item>
     </a-assets>
 
-    <!-- Essential Lighting so the model isn't completely black -->
+    <!-- Essential Lighting -->
     <a-light type="ambient" intensity="1.5"></a-light>
     <a-light type="directional" intensity="2.5" position="1 2 1"></a-light>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Target index 0 matches the first target in targets.mind -->
+    <!-- AR Target Container -->
     <a-entity mindar-image-target="targetIndex: 0" id="arTarget">
       <a-gltf-model
+        id="modelEntity"
         src="#animatedModel"
         position="0 0 0"
-        rotation="90 0 0"
+        rotation="0 0 0"
         scale="0.5 0.5 0.5"
-        animation-mixer="clip: 01_Run_Armature_0; loop: repeat">
+        animation-mixer="clip: *; loop: repeat">
       </a-gltf-model>
     </a-entity>
 
   </a-scene>
 
   <script>
-    // Debugging target detection
     document.addEventListener("DOMContentLoaded", () => {
       const target = document.getElementById("arTarget");
+      const model = document.getElementById("modelEntity");
+
+      // Verify if crown.glb loads successfully
+      model.addEventListener("model-loaded", () => {
+        console.log("✅ crown.glb loaded successfully!");
+      });
+
+      // Output loading errors to Eruda debug console if it fails
+      model.addEventListener("model-error", (e) => {
+        console.error("❌ Failed to load crown.glb:", e.detail);
+      });
 
       target.addEventListener("targetFound", () => {
         console.log("✅ MindAR Target Found!");
