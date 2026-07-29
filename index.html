@@ -82,7 +82,7 @@
             src="#boatModel"
             position="0 0 0"
             rotation="0 0 0"
-            scale="0.05 0.05 0.05"
+            scale="0.25 0.25 0.25"
             no-cull>
         </a-gltf-model>
     </a-entity>
@@ -106,52 +106,55 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const synth = window.speechSynthesis;
-    let speechText = "";
+    let currentFetchAbort = null;
 
-    fetch("./speech.txt")
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to load speech.txt");
-            return response.text();
-        })
-        .then(text => {
-            speechText = text.trim();
-        })
-        .catch(error => console.error(error));
-
-    function speakText() {
-        if (!speechText) return;
-        synth.cancel();
-        const utterance = new SpeechSynthesisUtterance(speechText);
-        utterance.rate = 0.9;
-        utterance.pitch = 1.0;
-        synth.speak(utterance);
-    }
-
+    // Helper function to stop ongoing speech
     function stopSpeech() {
         synth.cancel();
     }
 
-    // Target 0: Ganapathy
+    // Helper function to fetch text file dynamically and speak it
+    function fetchAndSpeak(filename) {
+        stopSpeech(); // Stop any currently playing audio
+
+        fetch(`./${filename}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`Failed to load ${filename}`);
+                return response.text();
+            })
+            .then(text => {
+                const speechText = text.trim();
+                if (!speechText) return;
+
+                const utterance = new SpeechSynthesisUtterance(speechText);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                synth.speak(utterance);
+            })
+            .catch(error => console.error(`Error loading ${filename}:`, error));
+    }
+
+    // Target 0: Ganapathy (uses ganapathy.txt if present, or speech.txt as fallback)
     const ganapathyTarget = document.getElementById("ganapathyTarget");
     ganapathyTarget.addEventListener("targetFound", () => {
         console.log("🐘 Ganapathy Target Found");
-        speakText();
+        fetchAndSpeak("speech.txt"); // Or change to "ganapathy.txt" if added
     });
     ganapathyTarget.addEventListener("targetLost", () => stopSpeech());
 
-    // Target 1: Boat
+    // Target 1: Boat (reads boat.txt)
     const boatTarget = document.getElementById("boatTarget");
     boatTarget.addEventListener("targetFound", () => {
         console.log("🚤 Boat Target Found");
-        speakText();
+        fetchAndSpeak("boat.txt");
     });
     boatTarget.addEventListener("targetLost", () => stopSpeech());
 
-    // Target 2: Crown
+    // Target 2: Crown (reads crown.txt)
     const crownTarget = document.getElementById("crownTarget");
     crownTarget.addEventListener("targetFound", () => {
         console.log("👑 Crown Target Found");
-        speakText();
+        fetchAndSpeak("crown.txt");
     });
     crownTarget.addEventListener("targetLost", () => stopSpeech());
 });
