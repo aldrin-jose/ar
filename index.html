@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Museum guidance</title>
+  <title>Museum Guidance AR</title>
 
   <!-- Mobile Debug Console -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
@@ -17,8 +17,23 @@
   <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Animation Mixer -->
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+  <!-- Component to fix scale/frustum clipping issues -->
+  <script>
+    AFRAME.registerComponent('no-cull', {
+      init: function () {
+        this.el.addEventListener('model-loaded', () => {
+          const mesh = this.el.getObject3D('mesh');
+          if (mesh) {
+            mesh.traverse((node) => {
+              if (node.isMesh) {
+                node.frustumCulled = false;
+              }
+            });
+          }
+        });
+      }
+    });
+  </script>
 </head>
 
 <body style="margin:0; overflow:hidden;">
@@ -32,21 +47,9 @@
 
     <!-- Assets -->
     <a-assets timeout="10000">
-
-        <!-- Crown Model -->
-        <a-asset-item
-            id="crownModel"
-            src="./crown.glb"
-            response-type="arraybuffer">
-        </a-asset-item>
-
-        <!-- Boat Model -->
-        <a-asset-item
-            id="boatModel"
-            src="./boat.glb"
-            response-type="arraybuffer">
-        </a-asset-item>
-
+        <a-asset-item id="ganapathyModel" src="./ganapathy.glb" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="boatModel" src="./boat.glb" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="crownModel" src="./crown.glb" response-type="arraybuffer"></a-asset-item>
     </a-assets>
 
     <!-- Lighting -->
@@ -54,59 +57,57 @@
     <a-light type="directional" intensity="2.5" position="1 2 1"></a-light>
 
     <!-- Camera -->
-    <a-camera
-        position="0 0 0"
-        look-controls="enabled:false">
-    </a-camera>
+    <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
-    <!-- ========================== -->
-    <!-- Crown Target (Target 0) -->
-    <!-- ========================== -->
+    <!-- ========================================= -->
+    <!-- Target 0: Ganapathy (Image 1 in test.mind) -->
+    <!-- ========================================= -->
+    <a-entity id="ganapathyTarget" mindar-image-target="targetIndex:0">
+        <a-gltf-model
+            id="ganapathyEntity"
+            src="#ganapathyModel"
+            position="0 0 0"
+            rotation="0 0 0"
+            scale="0.5 0.5 0.5"
+            no-cull>
+        </a-gltf-model>
+    </a-entity>
 
-    <a-entity
-        id="crownTarget"
-        mindar-image-target="targetIndex:0">
+    <!-- ========================================= -->
+    <!-- Target 1: Boat (Image 2 in test.mind)     -->
+    <!-- ========================================= -->
+    <a-entity id="boatTarget" mindar-image-target="targetIndex:1">
+        <a-gltf-model
+            id="boatEntity"
+            src="#boatModel"
+            position="0 0 0"
+            rotation="0 0 0"
+            scale="0.05 0.05 0.05"
+            no-cull>
+        </a-gltf-model>
+    </a-entity>
 
+    <!-- ========================================= -->
+    <!-- Target 2: Crown (Image 3 in test.mind)    -->
+    <!-- ========================================= -->
+    <a-entity id="crownTarget" mindar-image-target="targetIndex:2">
         <a-gltf-model
             id="crownEntity"
             src="#crownModel"
             position="0 0 0"
             rotation="0 0 0"
             scale="0.5 0.5 0.5"
-            animation-mixer="clip:*; loop:repeat">
+            no-cull>
         </a-gltf-model>
-
-    </a-entity>
-
-    <!-- ========================== -->
-    <!-- Boat Target (Target 1) -->
-    <!-- ========================== -->
-
-    <a-entity
-        id="boatTarget"
-        mindar-image-target="targetIndex:1">
-
-        <!-- Fixed position offset and removed animation-mixer -->
-        <a-gltf-model
-            id="boatEntity"
-            src="#boatModel"
-            position="2.5 -0.6 -3.9"
-            rotation="0 0 0"
-            scale="1 1 1">
-        </a-gltf-model>
-
     </a-entity>
 
 </a-scene>
 
 <script>
-
 document.addEventListener("DOMContentLoaded", () => {
-
     const synth = window.speechSynthesis;
     let speechText = "";
 
-    // Load speech text
     fetch("./speech.txt")
         .then(response => {
             if (!response.ok) throw new Error("Failed to load speech.txt");
@@ -114,23 +115,15 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(text => {
             speechText = text.trim();
-            console.log("Speech Loaded:", speechText);
         })
-        .catch(error => {
-            console.error(error);
-        });
+        .catch(error => console.error(error));
 
     function speakText() {
-
         if (!speechText) return;
-
         synth.cancel();
-
         const utterance = new SpeechSynthesisUtterance(speechText);
-
         utterance.rate = 0.9;
         utterance.pitch = 1.0;
-
         synth.speak(utterance);
     }
 
@@ -138,34 +131,30 @@ document.addEventListener("DOMContentLoaded", () => {
         synth.cancel();
     }
 
-    // Crown Events
-    const crownTarget = document.getElementById("crownTarget");
-
-    crownTarget.addEventListener("targetFound", () => {
-        console.log("👑 Crown Target Found");
+    // Target 0: Ganapathy
+    const ganapathyTarget = document.getElementById("ganapathyTarget");
+    ganapathyTarget.addEventListener("targetFound", () => {
+        console.log("🐘 Ganapathy Target Found");
         speakText();
     });
+    ganapathyTarget.addEventListener("targetLost", () => stopSpeech());
 
-    crownTarget.addEventListener("targetLost", () => {
-        console.log("👑 Crown Target Lost");
-        stopSpeech();
-    });
-
-    // Boat Events
+    // Target 1: Boat
     const boatTarget = document.getElementById("boatTarget");
-
     boatTarget.addEventListener("targetFound", () => {
         console.log("🚤 Boat Target Found");
         speakText();
     });
+    boatTarget.addEventListener("targetLost", () => stopSpeech());
 
-    boatTarget.addEventListener("targetLost", () => {
-        console.log("🚤 Boat Target Lost");
-        stopSpeech();
+    // Target 2: Crown
+    const crownTarget = document.getElementById("crownTarget");
+    crownTarget.addEventListener("targetFound", () => {
+        console.log("👑 Crown Target Found");
+        speakText();
     });
-
+    crownTarget.addEventListener("targetLost", () => stopSpeech());
 });
-
 </script>
 
 </body>
