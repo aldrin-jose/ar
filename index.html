@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <title>Museum Guidance Robot</title>
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <!-- MindAR Image Tracking Library -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <!-- MindAR Gesture Handlers (For rotation and pinch-to-zoom) -->
+    <!-- Gesture Handlers for Rotation and Scaling -->
     <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/src/image-target/aframe/gesture-detector.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/src/image-target/aframe/gesture-handler.js"></script>
 
@@ -17,6 +17,8 @@
         overflow: hidden;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #0d1117;
+        user-select: none;
+        -webkit-user-select: none;
       }
 
       /* Animated Launch Overlay */
@@ -38,7 +40,6 @@
         box-sizing: border-box;
       }
 
-      /* Glowing Animated Title */
       .app-title {
         font-size: 2.2rem;
         font-weight: 800;
@@ -60,7 +61,6 @@
         animation: fadeIn 1.5s ease-in-out;
       }
 
-      /* Pulse Animated Icon */
       .robot-icon {
         width: 80px;
         height: 80px;
@@ -68,7 +68,6 @@
         animation: pulse 2s infinite ease-in-out;
       }
 
-      /* Start Button with Hover/Pulse */
       #start-btn {
         padding: 16px 36px;
         font-size: 1.1rem;
@@ -84,18 +83,16 @@
 
       #start-btn:active {
         transform: scale(0.96);
-        box-shadow: 0 5px 15px rgba(0, 114, 255, 0.3);
       }
 
-      /* On-screen Instruction Banner */
       #instruction-hint {
         position: absolute;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(13, 17, 23, 0.75);
+        background: rgba(13, 17, 23, 0.85);
         color: #00f2fe;
-        padding: 8px 18px;
+        padding: 10px 20px;
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 600;
@@ -103,30 +100,14 @@
         border: 1px solid rgba(0, 242, 254, 0.3);
         z-index: 10;
         display: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       }
 
-      /* Keyframe Animations */
-      @keyframes shine {
-        to { background-position: 200% center; }
-      }
+      @keyframes shine { to { background-position: 200% center; } }
+      @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+      @keyframes pulse { 0% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
-      }
-
-      @keyframes pulse {
-        0% { transform: scale(1); opacity: 0.9; }
-        50% { transform: scale(1.08); opacity: 1; }
-        100% { transform: scale(1); opacity: 0.9; }
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      /* Fade Out Transition */
       .fade-out {
         opacity: 0;
         transition: opacity 0.8s ease-out;
@@ -135,7 +116,7 @@
     </style>
   </head>
   <body>
-    <!-- Animated Opening Overlay -->
+    <!-- Launch Screen Overlay -->
     <div id="overlay">
       <svg class="robot-icon" viewBox="0 0 24 24" fill="none" stroke="#00f2fe" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="11" width="18" height="10" rx="2"></rect>
@@ -149,32 +130,37 @@
       <button id="start-btn">Start Tour & Voice Guide</button>
     </div>
 
-    <!-- User Instruction Banner -->
-    <div id="instruction-hint">👆 Drag to rotate 3D model | Pinch to zoom</div>
+    <div id="instruction-hint">👆 Touch & Drag to rotate 3D model | Pinch to zoom</div>
 
-    <!-- MindAR Scene with Gesture Detector Enabled -->
+    <!-- MindAR Scene with Motion Smoothing and Touch Interaction -->
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 3;" 
+      mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 3; filterMinCF: 0.0001; filterBeta: 0.001;" 
       gesture-detector
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      renderer="colorManagement: true; physicallyCorrectLights: true; exposure: 1.0;" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
 
-      <!-- Assets Preloader -->
+      <!-- Asset Preloader -->
       <a-assets>
         <a-asset-item id="swordModel" src="./sword.glb"></a-asset-item>
         <a-asset-item id="boatModel" src="./boat.glb"></a-asset-item>
         <a-asset-item id="crownModel" src="./crown.glb"></a-asset-item>
       </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <!-- Lighting Setup (Fixes dark/uncolored models on mobile) -->
+      <a-light type="ambient" intensity="1.8" color="#ffffff"></a-light>
+      <a-light type="directional" intensity="1.5" position="1 4 2" cast-shadow="false"></a-light>
+      <a-light type="directional" intensity="0.8" position="-1 -2 -2"></a-light>
 
-      <!-- Target 0: Shiva image -> Sword GLB (Interactive Rotation Enabled) -->
+      <!-- Raycasting Camera (Enables touch interactions) -->
+      <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .cantap" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
+
+      <!-- Target 0: Shiva -> Sword GLB -->
       <a-entity id="target-sword" mindar-image-target="targetIndex: 0">
         <a-gltf-model 
           class="cantap"
-          gesture-handler="minScale: 0.1; maxScale: 3"
+          gesture-handler="minScale: 0.1; maxScale: 3; rotationFactor: 5;"
           src="#swordModel" 
           position="0 0 0" 
           scale="0.5 0.5 0.5" 
@@ -182,11 +168,11 @@
         </a-gltf-model>
       </a-entity>
 
-      <!-- Target 1: Boat image -> Boat GLB (Interactive Rotation Enabled) -->
+      <!-- Target 1: Boat -> Boat GLB -->
       <a-entity id="target-boat" mindar-image-target="targetIndex: 1">
         <a-gltf-model 
           class="cantap"
-          gesture-handler="minScale: 0.1; maxScale: 3"
+          gesture-handler="minScale: 0.1; maxScale: 3; rotationFactor: 5;"
           src="#boatModel" 
           position="0 0 0" 
           scale="0.5 0.5 0.5" 
@@ -194,11 +180,11 @@
         </a-gltf-model>
       </a-entity>
 
-      <!-- Target 2: Crown image -> Crown GLB (Interactive Rotation Enabled) -->
+      <!-- Target 2: Crown -> Crown GLB -->
       <a-entity id="target-crown" mindar-image-target="targetIndex: 2">
         <a-gltf-model 
           class="cantap"
-          gesture-handler="minScale: 0.1; maxScale: 3"
+          gesture-handler="minScale: 0.1; maxScale: 3; rotationFactor: 5;"
           src="#crownModel" 
           position="0 0 0" 
           scale="0.5 0.5 0.5" 
@@ -251,7 +237,7 @@
           overlay.classList.add("fade-out");
           setTimeout(() => {
             overlay.style.display = "none";
-            hint.style.display = "block"; // Show user rotation hint
+            hint.style.display = "block";
           }, 800);
 
           if ('speechSynthesis' in window) {
