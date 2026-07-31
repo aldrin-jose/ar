@@ -1,164 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Museum Guidance AR</title>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- MindAR & A-Frame Libraries -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  </head>
+  <body>
+    <!-- MindAR Scene referencing target.mind -->
+    <a-scene 
+      mindar-image="imageTargetSrc: ./targets.mind;" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
+      
+      <a-assets>
+        <!-- Asset Definitions for Shiva (Target 0) -->
+        <a-asset-item id="shivaModel" src="./models/shiva.gltf"></a-asset-item>
 
-  <!-- Mobile Debug Console -->
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script>
-    eruda.init();
-  </script>
+        <!-- Asset Definitions for Boat (Target 1) -->
+        <a-asset-item id="boatModel" src="./models/boat.gltf"></a-asset-item>
 
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+        <!-- Asset Definitions for Crown (Target 2) -->
+        <a-asset-item id="crownModel" src="./models/crown.gltf"></a-asset-item>
+      </a-assets>
 
-  <!-- MindAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <!-- Component to fix scale/frustum clipping issues -->
-  <script>
-    AFRAME.registerComponent('no-cull', {
-      init: function () {
-        this.el.addEventListener('model-loaded', () => {
-          const mesh = this.el.getObject3D('mesh');
-          if (mesh) {
-            mesh.traverse((node) => {
-              if (node.isMesh) {
-                node.frustumCulled = false;
-              }
-            });
-          }
-        });
-      }
-    });
-  </script>
-</head>
-
-<body style="margin:0; overflow:hidden;">
-
-<a-scene
-    mindar-image="imageTargetSrc: ./test.mind;"
-    color-space="sRGB"
-    renderer="colorManagement: true; antialias: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
-
-    <!-- Assets -->
-    <a-assets timeout="10000">
-        <a-asset-item id="shivaModel" src="./sword.glb" response-type="arraybuffer"></a-asset-item>
-        <a-asset-item id="boatModel" src="./boat.glb" response-type="arraybuffer"></a-asset-item>
-        <a-asset-item id="crownModel" src="./crown.glb" response-type="arraybuffer"></a-asset-item>
-    </a-assets>
-
-    <!-- Lighting -->
-    <a-light type="ambient" intensity="1.5"></a-light>
-    <a-light type="directional" intensity="2.5" position="1 2 1"></a-light>
-
-    <!-- Camera -->
-    <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
-
-    <!-- ========================================= -->
-    <!-- Target 0: Ganapathy (Image 1 in test.mind) -->
-    <!-- ========================================= -->
-    <a-entity id="ganapathyTarget" mindar-image-target="targetIndex:0">
-        <a-gltf-model
-            id="ganapathyEntity"
-            src="#ganapathyModel"
-            position="0 0 0"
-            rotation="0 0 0"
-            scale="0.5 0.5 0.5"
-            no-cull>
+      <!-- TARGET 0: SHIVA (Image 1) -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-gltf-model 
+          src="#shivaModel" 
+          position="0 0 0" 
+          scale="0.5 0.5 0.5" 
+          rotation="0 0 0">
         </a-gltf-model>
-    </a-entity>
+      </a-entity>
 
-    <!-- ========================================= -->
-    <!-- Target 1: Boat (Image 2 in test.mind)     -->
-    <!-- ========================================= -->
-    <a-entity id="boatTarget" mindar-image-target="targetIndex:1">
-        <a-gltf-model
-            id="boatEntity"
-            src="#boatModel"
-            position="0 0 0"
-            rotation="0 0 0"
-            scale="0.25 0.25 0.25"
-            no-cull>
+      <!-- TARGET 1: BOAT (Image 2) -->
+      <a-entity mindar-image-target="targetIndex: 1">
+        <a-gltf-model 
+          src="#boatModel" 
+          position="0 0 0" 
+          scale="0.5 0.5 0.5" 
+          rotation="0 0 0">
         </a-gltf-model>
-    </a-entity>
+      </a-entity>
 
-    <!-- ========================================= -->
-    <!-- Target 2: Crown (Image 3 in test.mind)    -->
-    <!-- ========================================= -->
-    <a-entity id="crownTarget" mindar-image-target="targetIndex:2">
-        <a-gltf-model
-            id="crownEntity"
-            src="#crownModel"
-            position="0 0 0"
-            rotation="0 0 0"
-            scale="0.5 0.5 0.5"
-            no-cull>
+      <!-- TARGET 2: CROWN (Image 3) -->
+      <a-entity mindar-image-target="targetIndex: 2">
+        <a-gltf-model 
+          src="#crownModel" 
+          position="0 0 0" 
+          scale="0.5 0.5 0.5" 
+          rotation="0 0 0">
         </a-gltf-model>
-    </a-entity>
+      </a-entity>
 
-</a-scene>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const synth = window.speechSynthesis;
-    let currentFetchAbort = null;
-
-    // Helper function to stop ongoing speech
-    function stopSpeech() {
-        synth.cancel();
-    }
-
-    // Helper function to fetch text file dynamically and speak it
-    function fetchAndSpeak(filename) {
-        stopSpeech(); // Stop any currently playing audio
-
-        fetch(`./${filename}`)
-            .then(response => {
-                if (!response.ok) throw new Error(`Failed to load ${filename}`);
-                return response.text();
-            })
-            .then(text => {
-                const speechText = text.trim();
-                if (!speechText) return;
-
-                const utterance = new SpeechSynthesisUtterance(speechText);
-                utterance.rate = 0.9;
-                utterance.pitch = 1.0;
-                synth.speak(utterance);
-            })
-            .catch(error => console.error(`Error loading ${filename}:`, error));
-    }
-
-    // Target 0: Ganapathy (uses ganapathy.txt if present, or speech.txt as fallback)
-    const ganapathyTarget = document.getElementById("ganapathyTarget");
-    ganapathyTarget.addEventListener("targetFound", () => {
-        console.log("🐘 Ganapathy Target Found");
-        fetchAndSpeak("speech.txt"); // Or change to "ganapathy.txt" if added
-    });
-    ganapathyTarget.addEventListener("targetLost", () => stopSpeech());
-
-    // Target 1: Boat (reads boat.txt)
-    const boatTarget = document.getElementById("boatTarget");
-    boatTarget.addEventListener("targetFound", () => {
-        console.log("🚤 Boat Target Found");
-        fetchAndSpeak("boat.txt");
-    });
-    boatTarget.addEventListener("targetLost", () => stopSpeech());
-
-    // Target 2: Crown (reads crown.txt)
-    const crownTarget = document.getElementById("crownTarget");
-    crownTarget.addEventListener("targetFound", () => {
-        console.log("👑 Crown Target Found");
-        fetchAndSpeak("crown.txt");
-    });
-    crownTarget.addEventListener("targetLost", () => stopSpeech());
-});
-</script>
-
-</body>
+    </a-scene>
+  </body>
 </html>
